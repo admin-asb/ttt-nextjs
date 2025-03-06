@@ -30,10 +30,6 @@ const gameSlice = createSlice({
       state.userSymbol = userSymbol;
       state.computerSymbol = userSymbol === "x" ? "o" : "x";
       state.gameStarted = true;
-      state.board = Array(3)
-        .fill(null)
-        .map(() => Array(3).fill(null));
-      state.currentPlayer = "x";
     },
     makeMove(state, action) {
       const { row, col } = action.payload;
@@ -50,18 +46,108 @@ const gameSlice = createSlice({
     computerMove(state) {
       if (state.currentPlayer !== state.computerSymbol || state.winner) return;
 
-      const availableMoves = [];
-      state.board.forEach((row, rowIndex) => {
-        row.forEach((cell, colIndex) => {
-          if (!cell) availableMoves.push([rowIndex, colIndex]);
-        });
-      });
-
-      if (availableMoves.length > 0) {
-        const [row, col] =
-          availableMoves[Math.floor(Math.random() * availableMoves.length)];
-        state.board[row][col] = state.computerSymbol;
+      // If it's the first move, always choose the center if available
+      if (!state.board[1][1]) {
+        state.board[1][1] = state.computerSymbol;
         state.currentPlayer = state.userSymbol;
+        return;
+      }
+
+      function findWinningMove(symbol) {
+        for (const combination of WINNING_COMBINATIONS) {
+          const [
+            { row: r1, column: c1 },
+            { row: r2, column: c2 },
+            { row: r3, column: c3 },
+          ] = combination;
+          const cells = [
+            state.board[r1][c1],
+            state.board[r2][c2],
+            state.board[r3][c3],
+          ];
+
+          if (
+            cells.filter((cell) => cell === symbol).length === 2 &&
+            cells.includes(null)
+          ) {
+            const emptyIndex = cells.indexOf(null);
+            return [
+              combination[emptyIndex].row,
+              combination[emptyIndex].column,
+            ];
+          }
+        }
+        return null;
+      }
+
+      // 1. Check if the computer can win in the next move
+      let bestMove = findWinningMove(state.computerSymbol);
+      if (!bestMove) {
+        // 2. Check if the computer needs to block the opponent's win
+        bestMove = findWinningMove(state.userSymbol);
+      }
+
+      function minimax(board, depth, isMaximizing) {
+        const winner = checkWinner({ board });
+        if (winner === "computer") return 10 - depth;
+        if (winner === "user") return depth - 10;
+        if (isBoardFull(board)) return 0;
+
+        if (isMaximizing) {
+          let bestScore = -Infinity;
+          for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+              if (!board[i][j]) {
+                board[i][j] = state.computerSymbol;
+                let score = minimax(board, depth + 1, false);
+                board[i][j] = null;
+                bestScore = Math.max(bestScore, score);
+              }
+            }
+          }
+          return bestScore;
+        } else {
+          let bestScore = Infinity;
+          for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+              if (!board[i][j]) {
+                board[i][j] = state.userSymbol;
+                let score = minimax(board, depth + 1, true);
+                board[i][j] = null;
+                bestScore = Math.min(bestScore, score);
+              }
+            }
+          }
+          return bestScore;
+        }
+      }
+
+      function isBoardFull(board) {
+        return board.flat().every((cell) => cell !== null);
+      }
+
+      if (!bestMove) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (!state.board[i][j]) {
+              state.board[i][j] = state.computerSymbol;
+              let score = minimax(state.board, 0, false);
+              state.board[i][j] = null;
+              if (score > bestScore) {
+                bestScore = score;
+                bestMove = [i, j];
+              }
+            }
+          }
+        }
+      }
+
+      if (bestMove) {
+        const [row, col] = bestMove;
+        state.board[row][col] = state.computerSymbol;
+        checkWinner(state);
+        if (!state.winner) state.currentPlayer = state.userSymbol;
       }
     },
     checkWinner(state) {

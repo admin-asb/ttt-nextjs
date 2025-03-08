@@ -149,6 +149,8 @@ const gameSlice = createSlice({
         checkWinner(state);
         if (!state.winner) state.currentPlayer = state.userSymbol;
       }
+
+      return state;
     },
     checkWinner(state) {
       for (const combination of WINNING_COMBINATIONS) {
@@ -173,6 +175,7 @@ const gameSlice = createSlice({
     },
     setGameOver(state) {
       state.gameOver = true;
+      console.log(state.gameOver);
     },
     resetGame(state) {
       state.board = Array(3)
@@ -195,6 +198,11 @@ export const checkWinnerWithDelay = () => (dispatch, getState) => {
       dispatch(gameSlice.actions.setGameOver());
     }, 2000);
   }
+};
+
+export const handleComputerMove = () => (dispatch, getState) => {
+  dispatch(gameSlice.actions.computerMove());
+  dispatch(checkWinnerWithDelay()); // Now check the winner properly
 };
 
 export const { startGame, makeMove, computerMove, checkWinner, resetGame } =

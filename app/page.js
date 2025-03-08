@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { computerMove, startGame } from "@/store/game-slice";
+import { handleComputerMove, startGame } from "@/store/game-slice";
 import Intro from "@/components/Intro";
 import Main from "@/components/Main";
 import Results from "@/components/Results";
@@ -12,7 +12,7 @@ function useComputerMove(currentPlayer, computerSymbol) {
 
   useEffect(() => {
     if (currentPlayer === computerSymbol) {
-      const timer = setTimeout(() => dispatch(computerMove()), 500);
+      const timer = setTimeout(() => dispatch(handleComputerMove()), 500);
       return () => clearTimeout(timer);
     }
   }, [currentPlayer, computerSymbol, dispatch]);

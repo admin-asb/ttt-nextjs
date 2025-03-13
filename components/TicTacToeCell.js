@@ -3,7 +3,7 @@
 import { Caprasimo } from "next/font/google";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { checkWinnerWithDelay, makeMove } from "@/store/game-slice";
+import { makeMove } from "@/store/game-slice";
 
 const caprasimo = Caprasimo({
   variable: "--font-caprasimo",
@@ -18,6 +18,7 @@ export default function TicTacToeCell({ rowIndex, colIndex, playerSymbol }) {
 
   useEffect(() => {
     if (winner) {
+      console.log(winner);
       setShowWinningCells(true);
       setTimeout(() => setShowWinningCells(false), 2000);
     }
@@ -25,7 +26,6 @@ export default function TicTacToeCell({ rowIndex, colIndex, playerSymbol }) {
 
   function handleMove(row, col) {
     dispatch(makeMove({ row, col }));
-    dispatch(checkWinnerWithDelay());
   }
 
   const isWinningCell = winningCells.some(

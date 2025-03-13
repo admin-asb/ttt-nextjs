@@ -14,6 +14,7 @@ export default function Intro({ onStartGame }) {
       <input
         type="text"
         id="name"
+        required
         className="text-base w-40 p-2 animate-pulse bg-blue-100 focus:outline-orange-300 text-center uppercase rounded-lg ml-3"
         onChange={(e) => setUsername(e.target.value)}
       />
@@ -25,7 +26,7 @@ export default function Intro({ onStartGame }) {
           <button
             key={symbol}
             onClick={() => onStartGame(username, symbol)}
-            className="w-1/2 bg-background text-center text-white py-3 rounded text-2xl font-medium cursor-pointer"
+            className="w-1/2 bg-background text-center text-white py-3 rounded text-2xl font-medium"
           >
             Player ({symbol})
           </button>

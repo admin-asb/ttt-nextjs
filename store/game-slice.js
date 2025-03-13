@@ -25,11 +25,16 @@ const gameSlice = createSlice({
   initialState,
   reducers: {
     startGame(state, action) {
-      const { username, userSymbol } = action.payload;
+      const { username, userSymbol, wins, losses, draws, totalGames } =
+        action.payload;
       state.username = username;
       state.userSymbol = userSymbol;
       state.computerSymbol = userSymbol === "x" ? "o" : "x";
       state.gameStarted = true;
+      state.wins = wins;
+      state.losses = losses;
+      state.draws = draws;
+      state.totalGames = totalGames;
     },
     makeMove(state, action) {
       const { row, col } = action.payload;
@@ -46,7 +51,6 @@ const gameSlice = createSlice({
     computerMove(state) {
       if (state.currentPlayer !== state.computerSymbol || state.winner) return;
 
-      // If it's the first move, always choose the center if available
       if (!state.board[1][1]) {
         state.board[1][1] = state.computerSymbol;
         state.currentPlayer = state.userSymbol;
@@ -80,10 +84,8 @@ const gameSlice = createSlice({
         return null;
       }
 
-      // 1. Check if the computer can win in the next move
       let bestMove = findWinningMove(state.computerSymbol);
       if (!bestMove) {
-        // 2. Check if the computer needs to block the opponent's win
         bestMove = findWinningMove(state.userSymbol);
       }
 
@@ -146,7 +148,6 @@ const gameSlice = createSlice({
       if (bestMove) {
         const [row, col] = bestMove;
         state.board[row][col] = state.computerSymbol;
-        checkWinner(state);
         if (!state.winner) state.currentPlayer = state.userSymbol;
       }
 
@@ -164,6 +165,12 @@ const gameSlice = createSlice({
         ) {
           state.winner = symbol === state.userSymbol ? "user" : "computer";
           state.winningCells = [a, b, c];
+
+          if (state.winner === "user") {
+            state.wins++;
+          } else {
+            state.losses++;
+          }
           return;
         }
       }
@@ -171,11 +178,18 @@ const gameSlice = createSlice({
       if (state.board.flat().every((cell) => cell !== null)) {
         state.winner = "draw";
         state.winningCells = [];
+        state.draws++;
       }
     },
+    updateStats(state, action) {
+      state.wins = action.payload.wins;
+      state.losses = action.payload.losses;
+      state.draws = action.payload.draws;
+      state.totalGames = action.payload.totalGames;
+    },
     setGameOver(state) {
+      console.log("Game Over set to true!");
       state.gameOver = true;
-      console.log(state.gameOver);
     },
     resetGame(state) {
       state.board = Array(3)
@@ -185,9 +199,30 @@ const gameSlice = createSlice({
       state.winner = null;
       state.gameOver = false;
       state.winningCells = [];
+      state.gameStarted = false;
     },
   },
 });
+
+export const fetchUserData = (username, userSymbol) => {
+  return async (dispatch) => {
+    try {
+      const response = await fetch(
+        `https://tic-tac-toe-b527d-default-rtdb.firebaseio.com/users/${username}.json`
+      );
+
+      const data = await response.json();
+
+      const userStats = data || { wins: 0, losses: 0, draws: 0, totalGames: 0 };
+
+      dispatch(
+        gameSlice.actions.startGame({ username, userSymbol, ...userStats })
+      );
+    } catch (error) {
+      console.error("Error checking user in database:", error);
+    }
+  };
+};
 
 export const checkWinnerWithDelay = () => (dispatch, getState) => {
   dispatch(gameSlice.actions.checkWinner());
@@ -200,9 +235,32 @@ export const checkWinnerWithDelay = () => (dispatch, getState) => {
   }
 };
 
-export const handleComputerMove = () => (dispatch, getState) => {
+export const handleComputerMove = () => (dispatch) => {
   dispatch(gameSlice.actions.computerMove());
-  dispatch(checkWinnerWithDelay()); // Now check the winner properly
+  dispatch(checkWinnerWithDelay());
+};
+
+export const saveGameResult = (username, wins, losses, draws) => {
+  return async (dispatch) => {
+    try {
+      const totalGames = wins + losses + draws;
+
+      await fetch(
+        `https://tic-tac-toe-b527d-default-rtdb.firebaseio.com/users/${username}.json`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wins, losses, draws, totalGames }),
+        }
+      );
+
+      dispatch(
+        gameSlice.actions.updateStats({ wins, losses, draws, totalGames })
+      );
+    } catch (error) {
+      throw new Error("Updating data failed!", error);
+    }
+  };
 };
 
 export const { startGame, makeMove, computerMove, checkWinner, resetGame } =

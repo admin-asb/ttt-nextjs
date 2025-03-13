@@ -2,20 +2,24 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { handleComputerMove, startGame } from "@/store/game-slice";
+import { fetchUserData, handleComputerMove } from "@/store/game-slice";
 import Intro from "@/components/Intro";
 import Main from "@/components/Main";
 import Results from "@/components/Results";
 
-function useComputerMove(currentPlayer, computerSymbol) {
+function useComputerMove(currentPlayer, computerSymbol, gameOver) {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    console.log("gameOver:", gameOver);
+
+    if (gameOver) return;
+
     if (currentPlayer === computerSymbol) {
       const timer = setTimeout(() => dispatch(handleComputerMove()), 500);
       return () => clearTimeout(timer);
     }
-  }, [currentPlayer, computerSymbol, dispatch]);
+  }, [currentPlayer, computerSymbol, gameOver, dispatch]);
 }
 
 export default function Home() {
@@ -23,10 +27,10 @@ export default function Home() {
   const gameState = useSelector((state) => state.game);
   const { gameStarted, gameOver, currentPlayer, computerSymbol } = gameState;
 
-  useComputerMove(currentPlayer, computerSymbol);
+  useComputerMove(currentPlayer, computerSymbol, gameOver);
 
   function handleStartGame(name, chosenSymbol) {
-    dispatch(startGame({ username: name, userSymbol: chosenSymbol }));
+    dispatch(fetchUserData(name, chosenSymbol));
   }
 
   return (
@@ -37,3 +41,6 @@ export default function Home() {
     </>
   );
 }
+
+/// чекнуть есть ли юзернэйм или в поле для юзернэйма добавить "обязательное заполнение"
+/// не позволять компьютеру играть после определения победителя

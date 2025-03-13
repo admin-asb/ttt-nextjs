@@ -1,7 +1,6 @@
 import { resetGame, saveGameResult } from "@/store/game-slice";
 import { Caprasimo } from "next/font/google";
 import { useDispatch, useSelector } from "react-redux";
-import Intro from "./Intro";
 import { useEffect } from "react";
 
 const caprasimo = Caprasimo({
@@ -22,7 +21,7 @@ export default function Results() {
 
   useEffect(() => {
     if (username) {
-      dispatch(saveGameResult(username, wins, losses, draws));
+      dispatch(saveGameResult(username, wins || 0, losses || 0, draws || 0));
     }
   }, [dispatch, username, wins, losses, draws]);
 
@@ -41,13 +40,13 @@ export default function Results() {
       </h2>
       <p className="pt-5 text-3xl">{result}</p>
       <p className="pt-5 text-xl">
-        Total games: {totalGames}
+        Total games: {totalGames || ""}
         <br />
-        Wins: {wins}
+        Wins: {wins || ""}
         <br />
-        Losses: {losses}
+        Losses: {losses || ""}
         <br />
-        Draws: {draws}
+        Draws: {draws || ""}
       </p>
       <button
         onClick={handleResetGame}

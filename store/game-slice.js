@@ -188,7 +188,6 @@ const gameSlice = createSlice({
       state.totalGames = action.payload.totalGames;
     },
     setGameOver(state) {
-      console.log("Game Over set to true!");
       state.gameOver = true;
     },
     resetGame(state) {
@@ -228,6 +227,7 @@ export const checkWinnerWithDelay = () => (dispatch, getState) => {
   dispatch(gameSlice.actions.checkWinner());
 
   const { game } = getState();
+
   if (game.winner) {
     setTimeout(() => {
       dispatch(gameSlice.actions.setGameOver());
@@ -235,7 +235,12 @@ export const checkWinnerWithDelay = () => (dispatch, getState) => {
   }
 };
 
-export const handleComputerMove = () => (dispatch) => {
+export const handleComputerMove = () => (dispatch, getState) => {
+  dispatch(checkWinnerWithDelay());
+
+  const { game } = getState();
+  if (game.winner) return;
+
   dispatch(gameSlice.actions.computerMove());
   dispatch(checkWinnerWithDelay());
 };

@@ -11,8 +11,6 @@ function useComputerMove(currentPlayer, computerSymbol, gameOver) {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    console.log("gameOver:", gameOver);
-
     if (gameOver) return;
 
     if (currentPlayer === computerSymbol) {
@@ -41,6 +39,3 @@ export default function Home() {
     </>
   );
 }
-
-/// чекнуть есть ли юзернэйм или в поле для юзернэйма добавить "обязательное заполнение"
-/// не позволять компьютеру играть после определения победителя

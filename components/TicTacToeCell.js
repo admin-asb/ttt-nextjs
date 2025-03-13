@@ -18,7 +18,6 @@ export default function TicTacToeCell({ rowIndex, colIndex, playerSymbol }) {
 
   useEffect(() => {
     if (winner) {
-      console.log(winner);
       setShowWinningCells(true);
       setTimeout(() => setShowWinningCells(false), 2000);
     }
